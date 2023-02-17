@@ -1,109 +1,71 @@
-const listOfTasks = [
-  {
-    start: 0,
-    duration: 15,
-    title: 'Exercise',
-  },
-  {
-    start: 25,
-    duration: 30,
-    title: 'Travel to work',
-  },
-  {
-    start: 30,
-    duration: 30,
-    title: 'Plan day',
-  },
-  {
-    start: 60,
-    duration: 15,
-    title: "Review yesterday's commits",
-  },
-  {
-    start: 100,
-    duration: 15,
-    title: 'Code review',
-  },
-  {
-    start: 180,
-    duration: 90,
-    title: 'Have lunch with John',
-  },
-  {
-    start: 360,
-    duration: 30,
-    title: 'Skype call',
-  },
-  {
-    start: 370,
-    duration: 45,
-    title: 'Follow up with designer',
-  },
-  {
-    start: 405,
-    duration: 30,
-    title: 'Push up branch',
-  },
-];
-
 class RenderCalendar {
   constructor() {
     this.container = document.querySelector('.calendar-container');
-    this.renderRange();
+    this.renderAll();
   }
-  renderRange() {
-    for (let i = 8; i <= 17; i++) {
-      const rangeOfHour = document.createElement('div');
-      rangeOfHour.className = 'hour hour-range';
+
+  renderOne(currentTime) {
+    const rangeOfHour = document.createElement('div');
+    rangeOfHour.className = 'hour hour-range';
+    rangeOfHour.innerHTML = `
+        <p class="hour hour-current">${currentTime}:00</p>
+        <p class="hour hour-half">${currentTime}:30</p>
+        `;
+    if (currentTime === 17) {
       rangeOfHour.innerHTML = `
-        <p class="hour hour-current">${i}:00</p>
-        <p class="hour hour-half">${i}:30</p>
+        <p class="hour-current">${currentTime}:00</p>
         `;
-      if (i === 17) {
-        rangeOfHour.innerHTML = `
-        <p class="hour-current">${i}:00</p>
-        `;
-      }
-      this.container.append(rangeOfHour);
+    }
+    return this.container.append(rangeOfHour);
+  }
+
+  renderAll() {
+    for (let i = 8; i <= 17; i++) {
+      this.renderOne(i);
     }
   }
 }
 
-class Task {
-  constructor(task) {
-    Object.assign(this, task);
+class Event {
+  constructor(item) {
+    Object.assign(this, item);
     this.width = 200;
-    this.end = task.start + task.duration;
+    this.end = item.start + item.duration;
     this.leftX = 40;
-    this.id = Task.ID++;
+    this.id = Event.id++;
   }
-  static ID = 0;
+  static id = 0;
 }
 
-class TaskList {
+class ListOfEvents {
   constructor(list) {
-    this.tasks = list.map((task) => new Task(task));
-    this.setWidthAndPosition();
+    list = list.sort(function (a, b) {
+      return a.start - b.start;
+    });
+    this.items = list.map((item) => new Event(item));
+
+    this.calculateWidthAndLeft();
   }
 
-  setWidthAndPosition() {
-    this.tasks.forEach((task) => {
-      for (let i = 0; i < this.tasks.length; i++) {
+  calculateWidthAndLeft() {
+    // width
+    this.items.forEach((item) => {
+      for (let i = 0; i < this.items.length; i++) {
         if (
-          (task.end > this.tasks[i].start &&
-            task.start < this.tasks[i].start) ||
-          (task.end > this.tasks[i].start && task.end < this.tasks[i].end)
+          (item.end > this.items[i].start &&
+            item.start < this.items[i].start) ||
+          (item.end > this.items[i].start && item.end < this.items[i].end)
         ) {
-          task.width = 100;
-          this.tasks[i].width = 100;
+          item.width = 100;
+          this.items[i].width = 100;
 
           // left coordinate
 
-          if (task.leftX === this.tasks[i].leftX) {
-            this.tasks[i].leftX += 100;
+          if (item.leftX === this.items[i].leftX) {
+            this.items[i].leftX += 100;
           }
-          if (task.leftX === 140 && this.tasks[i].leftX === 40) {
-            this.tasks[i].leftX += 200;
+          if (item.leftX === 140 && this.items[i].leftX == 40) {
+            this.items[i].leftX += 200;
           }
         }
       }
@@ -111,31 +73,125 @@ class TaskList {
   }
 }
 
-class RenderTaskList {
-  #taskList = null;
-  constructor(tasksList) {
-    this.eventContainer = document.querySelector('.calendar-container');
-    this.#taskList = tasksList.tasks;
-    this.renderTask(this.#taskList);
+class RenderEvents {
+  #listOfTasks = null;
+  #renderCalendar = null;
+
+  constructor(listOfEvents, renderCalendar) {
+    this.container = document.querySelector('.calendar-container');
+
+    this.#listOfTasks = listOfEvents.items;
+
+    this.#renderCalendar = renderCalendar;
+
+    this.renderEventsList(this.#listOfTasks);
   }
 
-  renderTask(listOfTasks) {
-    const taskItems = listOfTasks.forEach((item) => {
-      const taskContainer = document.createElement('div');
-      taskContainer.className = 'task-item';
-      taskContainer.innerHTML = `
-          <p>${item.title}</p>`;
-      taskContainer.setAttribute(
-        'style',
-        `height: ${item.duration * 2}px; width: ${item.width}px; top: ${
-          item.start * 2
-        }px; left: ${item.leftX}px;`
-      );
-      this.eventContainer.append(taskContainer);
+  renderOneEvent(event) {
+    const taskContainer = document.createElement('div');
+    taskContainer.className = 'task-item';
+    taskContainer.innerHTML = `
+          <p>${event.title}</p>`;
+    taskContainer.setAttribute(
+      'style',
+      `height: ${event.duration * 2}px; width: ${event.width}px; top: ${
+        event.start * 2
+      }px; left: ${event.leftX}px;`
+    );
+    return taskContainer;
+  }
+
+  renderEventsList(list) {
+    this.container.innerHTML = '';
+    this.#renderCalendar.renderAll();
+
+    // list of events
+    let eventsCollection = list.map((item) => this.renderOneEvent(item));
+    this.container.append(...eventsCollection);
+
+    this.eventModalWindow();
+  }
+  eventModalWindow() {
+    let listOfEventItems = this.container.querySelectorAll('.task-item');
+    let eventsArr = Array.from(listOfEventItems);
+
+    // duble click to delete event
+    eventsArr.forEach((item) => {
+      item.addEventListener('dblclick', () => {
+        listOfTasks = listOfTasks.filter((i) => {
+          return listOfTasks.indexOf(i) !== eventsArr.indexOf(item);
+        });
+
+        this.#listOfTasks = new ListOfEvents(listOfTasks);
+        this.renderEventsList(this.#listOfTasks.items);
+      });
+    });
+  }
+}
+
+class Inputs {
+  #renderEvents = null;
+  constructor(renderEvents) {
+    this.#renderEvents = renderEvents;
+    this.list = null;
+
+    this.modalBtn = document.querySelector('.modal-btn');
+    this.modalWindow = document.querySelector('.modal-window');
+    this.closeModal = document.querySelector('.modal-close');
+    this.addEvent = document.querySelector('.modal-add-event');
+
+    this.startInput = document.querySelector('.event-time');
+    this.durationInput = document.querySelector('.event-duration');
+    this.titleInput = document.querySelector('.event-name');
+    this.startInput.value = '08:00';
+    this.createEvent();
+  }
+  createEvent() {
+    // open modal
+    this.modalBtn.addEventListener('click', () => {
+      this.modalWindow.classList.toggle('active');
+      this.modalBtn.classList.toggle('hide');
+    });
+    // close modal
+    this.closeModal.addEventListener('click', () => {
+      this.modalWindow.classList.toggle('active');
+      this.modalBtn.classList.toggle('hide');
+    });
+
+    this.addEvent.addEventListener('click', () => {
+      // calculating start for event from time
+      let hours = this.startInput.value.slice(0, 2);
+      let minutes = this.startInput.value.slice(3);
+      minutes = +minutes;
+
+      let startTime = (+hours - 8) * 60 + minutes;
+
+      // create new Event
+
+      let newEvent = {
+        start: startTime,
+        duration: +this.durationInput.value,
+        title: this.titleInput.value,
+      };
+
+      // control time for the new event
+      if (this.durationInput.value > 0 && startTime < 540) {
+        this.modalWindow.classList.remove('active');
+        this.modalBtn.classList.toggle('hide');
+        listOfTasks.push(newEvent);
+
+        this.list = new ListOfEvents(listOfTasks);
+        this.#renderEvents.renderEventsList(this.list.items);
+
+        this.startInput.value = '08:00';
+        this.durationInput.value = null;
+        this.titleInput.value = '';
+      }
     });
   }
 }
 
 const renderCalendar = new RenderCalendar();
-const tasksList = new TaskList(listOfTasks);
-const renderTasks = new RenderTaskList(tasksList);
+const listofEvents = new ListOfEvents(listOfTasks);
+const renderEvents = new RenderEvents(listofEvents, renderCalendar);
+const inputs = new Inputs(renderEvents);

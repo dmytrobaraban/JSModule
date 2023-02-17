@@ -143,10 +143,21 @@ table {
 
 /* Start */
 
+.info{
+    display: block;
+    font-size: 22px;
+    font-weight: 600;
+    opacity: 0.5;
+    position: fixed;
+    top: 0;
+    
+    right: 0;
+}
+
 .calendar-container{
     font-family: 'Open Sans', sans-serif;
     margin: 40px auto;
-    width: 540px;
+    width: 600px;
     position: relative;
 }
 
@@ -170,6 +181,7 @@ table {
 
 .task-item {
     position: absolute;
+    cursor: pointer;
     background-color: #E2ECF5;
     border-left: 3px solid #6E9ECF;
     left: 40px;
@@ -179,4 +191,60 @@ table {
             white-space: nowrap;
             text-overflow: ellipsis;
     }
+}
+
+.modal{
+    &-btn{
+        display: block;
+        position: fixed;
+        top: 40px;
+        right: 10px;
+        cursor: pointer;
+        width: 222px;
+        padding: 10px 10px;
+        background-color: #cdd9e6;
+        border-style: none;
+        font-size: 16px;
+        box-shadow: 7px 21px 42px 0px rgba(134, 159, 167, 0.55);
+        border-radius: 10px;
+        &.hide{
+            display: none;
+        }
+    }
+    &-window{
+        display: none;
+        background-color: #cdd9e6;
+        opacity: 0.9;
+        box-shadow: 7px 21px 42px 0px rgba(134, 159, 167, 0.55);
+        border-radius: 10px;
+        &.active{
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 40px;
+            right: 0;
+        }
+        & p {
+            margin: 20px 0;
+            padding-left: 10px;
+            font-weight: 600;
+        }
+        & input{
+            padding: 10px 10px;
+            font-size: 16px;
+            background: linear-gradient(to right, rgba(233, 238, 246, 1) 0%, rgba(233, 238, 246, 1) 30%, rgba(168, 187, 224, 0.7) 100%);
+        }
+        & button{
+            cursor: pointer;
+            padding: 10px 10px;
+            background-color: #cdd9e6;
+            border-style: none;
+            font-size: 16px;
+            &:hover{
+                background-color: #81a1cc;
+                color: #f7f8fa;
+            }
+        }
+    }
+   
 }
